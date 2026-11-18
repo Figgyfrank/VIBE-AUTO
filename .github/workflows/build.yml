@@ -1,0 +1,29 @@
+name: Build DRIPMIX (Windows VST3)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --target DripMix_VST3 --parallel
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item -Recurse build/DripMix_artefacts/Release/VST3/DRIPMIX.vst3 out/
+          Compress-Archive -Path out/DRIPMIX.vst3 -DestinationPath DRIPMIX-vst3-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DRIPMIX-vst3-windows
+          path: DRIPMIX-vst3-windows.zip
