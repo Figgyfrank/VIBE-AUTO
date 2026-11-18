@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -27,3 +30,16 @@ jobs:
         with:
           name: DRIPMIX-vst3-windows
           path: DRIPMIX-vst3-windows.zip
+
+      - name: Publish build to dripmix-release branch
+        shell: pwsh
+        run: |
+          git config user.name "dripmix-bot"
+          git config user.email "noreply@github.com"
+          New-Item -ItemType Directory -Force -Path rel | Out-Null
+          Copy-Item DRIPMIX-vst3-windows.zip rel/
+          Set-Location rel
+          git init -q -b dripmix-release
+          git add -A
+          git commit -q -m "DRIPMIX Windows VST3 build ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" dripmix-release
